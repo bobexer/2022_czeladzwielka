@@ -8,10 +8,12 @@ library(tidyverse)
 library(sf)
 library(tmap)
 library(ggspatial)
+library(imager)
+library(gridExtra)
 
 # 2. Figures:
 # 2.1. Figure 1
-# 2.2. Fiture 2
+# 2.2. Figure 2
 czeladztrench <- st_read("czeladz_trench.shp")
 czeladzlayer <- st_read("czeladz_layer.shp")
 czeladzfeature <- st_read("czeladz_feature.shp")
@@ -28,3 +30,19 @@ ggplot(data = czeladzlayer) +
                          style = north_arrow_fancy_orienteering) +
   theme(panel.grid.major = element_line(color = gray(0.5), linetype = "dashed", 
                                         size = 0.5), panel.background = element_rect(fill = "white"))
+
+# 2.3. Figure 4
+czeladz_dataset <- read.csv("czeladz_dataset.csv", encoding="UTF-8", dec=".")
+LipTypes<-sort(unique(czeladz_dataset$TypeLip))
+czeladz_dataset$TypeLip<-factor(czeladz_dataset$TypeLip,levels=LipTypes)
+Fig4_1<-ggplot(subset(czeladz_dataset, !is.na(TypeLip)), aes(x=TypeLip))+
+  geom_bar(stat="count", position="dodge")+
+  geom_text(stat="count", aes(label=..count..), vjust=-0.5)+
+  ggtitle("Czeladź Wielka: lip type [n=369]")+
+  ylab("frequency")+ 
+  xlab("lip type")+
+  theme_minimal()+
+  theme(plot.title = element_text(hjust = 0.5))
+Fig4_2 <- load.image("czeladz_lips.png")
+Fig4_2 <- pictureGrob(Fig4_2)
+Fig4 <- grid.arrange(Fig4_1, Fig4_2, nrow=2)
