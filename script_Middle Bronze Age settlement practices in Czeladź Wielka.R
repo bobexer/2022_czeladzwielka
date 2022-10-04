@@ -8,7 +8,7 @@ library(tidyverse)
 library(sf)
 library(tmap)
 library(ggspatial)
-library(imager)
+library(grImport)
 library(gridExtra)
 
 # 2. Figures:
@@ -43,6 +43,11 @@ Fig4_1<-ggplot(subset(czeladz_dataset, !is.na(TypeLip)), aes(x=TypeLip))+
   xlab("lip type")+
   theme_minimal()+
   theme(plot.title = element_text(hjust = 0.5))
-Fig4_2 <- load.image("czeladz_lips.png")
-Fig4_2 <- pictureGrob(Fig4_2)
+Sys.setenv(R_GSCMD = normalizePath("C:/Program Files/gs/gs9.56.1/bin/gswin64.exe"))
+PostScriptTrace("czeladz_lips.ps", "czeladz_lips.xml",
+                charpath=TRUE, charpos=FALSE,
+                setflat=20, defaultcol="black",
+                encoding="ISO-8859-1", scaleEPS=.01)
+Fig4_2_1 <- readPicture("czeladz_lips.xml")
+Fig4_2 <- pictureGrob(Fig4_2_1)
 Fig4 <- grid.arrange(Fig4_1, Fig4_2, nrow=2)
