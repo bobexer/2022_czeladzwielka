@@ -8,15 +8,14 @@ library(tidyverse)
 library(sf)
 library(rnaturalearth)
 library(elevatr)
-#library(raster)
-#library(tmap)
+library(raster)
 library(cowplot)
 library(ggspatial)
 library(grImport)
 library(gridExtra)
 
 # 2. Figures:
-# 2.1. Figure 1
+## 2.1. Figure 1
 czeladz_region <- read.csv("czeladz_region.csv", encoding="UTF-8", dec=".")
 czeladz_region <- st_as_sf(czeladz_region, coords = c("xcoord", "ycoord"), crs = 2180)
 czeladz_region_box <- st_as_sfc(st_bbox(czeladz_region))
@@ -27,12 +26,13 @@ map1 = ggplot() +
   theme(panel.background = element_rect(fill = "white"),
         panel.border = element_rect(colour = "black", fill = NA, size = 1)) +
   coord_sf(xlim = c(-15, 55), ylim = c(35, 73), expand = TRUE)
-map1
 
 elevation_data <- get_elev_raster(czeladz_region, z = 9, expand = 2) #extract a raster base from the selected data
 elevation_data_df <- as.data.frame(elevation_data, xy = TRUE)
-colnames(elevation_data_df)[3] <- "elevation" # remove rows of data frame with one or more NA's,using complete.cases
+colnames(elevation_data_df)[3] <- "elevation" # remove rows of data frame with one or more NA's, using complete.cases
 elevation_data_df <- elevation_data_df[complete.cases(elevation_data_df), ]
+rivers <- st_read("eurriver.shp")
+rivers = st_transform(rivers, "EPSG:2180")
 map2 = ggplot() +
   geom_raster(data = elevation_data_df, aes(x = x, y = y, fill = elevation)) +
   scale_fill_gradientn(colours=c("#91cf60","#ffffbf","#fc8d59")) +
@@ -43,13 +43,8 @@ map2 = ggplot() +
   ylab("Latitude") +
   ggtitle("MBA sites in the Silesian-Greater Poland borderland") +
   annotation_scale(location = "bl", width_hint = 0.4) +
-  theme(panel.grid.major = element_line(color = gray(0.5),
-                                        linetype = "dashed", 
-                                        size = 0.5),
-        panel.background = element_rect(fill = "white")) +
-  coord_sf(xlim = st_bbox(czeladz_region$geometry)[c('xmin','xmax')],
-           ylim = st_bbox(czeladz_region$geometry)[c('ymin','ymax')])
-map2
+  theme(panel.grid.major = element_line(color = gray(0.5), linetype = "dashed", size = 0.5), panel.background = element_rect(fill = "white")) +
+  coord_sf(xlim = st_bbox(czeladz_region$geometry)[c('xmin','xmax')], ylim = st_bbox(czeladz_region$geometry)[c('ymin','ymax')])
 
 gg_Figure1 = ggdraw() +
   draw_plot(map2) +
@@ -60,7 +55,7 @@ ggsave(filename = "Figure 1.jpeg",
        height = 10,
        dpi = 300)
 
-# 2.2. Figure 2
+## 2.2. Figure 2
 czeladztrench <- st_read("czeladz_trench.shp")
 czeladzlayer <- st_read("czeladz_layer.shp")
 czeladzfeature <- st_read("czeladz_feature.shp")
@@ -79,7 +74,7 @@ ggplot(data = czeladzlayer) +
   theme(panel.grid.major = element_line(color = gray(0.5), linetype = "dashed", 
                                         size = 0.5), panel.background = element_rect(fill = "white"))
 
-# 2.3. Figure 4
+## 2.3. Figure 4
 czeladz_dataset <- read.csv("czeladz_dataset.csv", encoding="UTF-8", dec=".")
 LipTypes<-sort(unique(czeladz_dataset$TypeLip))
 czeladz_dataset$TypeLip<-factor(czeladz_dataset$TypeLip,levels=LipTypes)
