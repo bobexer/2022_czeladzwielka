@@ -13,6 +13,8 @@ library(cowplot)
 library(ggspatial)
 library(grImport)
 library(gridExtra)
+library(data.table)
+library(ggridges)
 
 # 2. Figures:
 ## 2.1. Figure 1
@@ -91,3 +93,37 @@ PostScriptTrace("czeladz_lips.eps", "czeladz_lips.xml")
 Fig4_2_1 <- readPicture("czeladz_lips.xml")
 Fig4_2 <- pictureGrob(Fig4_2_1)
 Fig4 <- grid.arrange(Fig4_1, Fig4_2, nrow=2)
+
+## 2.4. Figure 5
+
+## 2.5. Figure 6
+
+## 2.6. Figure 7
+
+## 2.7. Figure 8
+
+## 2.8. Figure 9
+
+## 2.9. Figure 10
+czeladz_c14 <- read.csv("czeladz_c14.csv")
+end <- c(czeladz_c14$estimation-czeladz_c14$std)
+start <-c(czeladz_c14$estimation+czeladz_c14$std)
+czeladz_c14 <- cbind(czeladz_c14, start)
+czeladz_c14 <- cbind(czeladz_c14, end)
+head(czeladz_c14)
+czeladz_c14_ranges <- Map(`:`, czeladz_c14$start, czeladz_c14$end)
+head(czeladz_c14_ranges)
+czeladz_c14 <- transform(czeladz_c14[rep(seq_len(nrow(czeladz_c14)), lengths(czeladz_c14_ranges)), c('labcode', 'site')],
+          start = unlist(czeladz_c14_ranges))
+Figure10<-ggplot(czeladz_c14, aes(x = start, y = fct_reorder(site, start), fill = site)) + 
+  geom_density_ridges(jittered_points = TRUE,
+                      position = position_points_jitter(width = 0.05, height = 0),
+                      point_shape = '|', point_size = 0.5, point_alpha = 1, alpha = 0.7,) +
+  labs(y = "Sites", x = "Age BP") +
+  theme_ridges() + 
+  theme(legend.position = "none")
+ggsave(filename = "Figure 10.jpeg", 
+       plot = Figure10,
+       width = 15, 
+       height = 15,
+       dpi = 300)
