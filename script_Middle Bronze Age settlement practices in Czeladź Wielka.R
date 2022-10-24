@@ -11,13 +11,13 @@ library(elevatr)
 library(raster)
 library(cowplot)
 library(ggspatial)
-library(grImport)
+library(grid)
 library(gridExtra)
+library(magick)
 library(data.table)
 library(ggridges)
 library(oxcAAR)
 library(data.table)
-library(rgugik)
 
 # 2. Figures:
 ## 2.1. Figure 1
@@ -54,69 +54,83 @@ map2 = ggplot() +
 gg_Figure1 = ggdraw() +
   draw_plot(map2) +
   draw_plot(map1, x = 0.8, y = 0.7, width = 0.2, height = 0.2)
-ggsave(filename = "Figure 1.jpeg", 
+ggsave(filename = "Figure 1.jpeg",
        plot = gg_Figure1,
-       width = 14, 
+       width = 14,
        height = 10,
        dpi = 300)
 
 ## 2.2. Figure 2
-DEM1 <- raster(paste0("75106_1053103_M-33-22-A-d-1-3.tif"))
-DEM2 <- raster(paste0("75106_1053101_M-33-22-A-d-1-1.tif"))
-DEM3 <- raster(paste0("75106_1053102_M-33-22-A-d-1-2.tif"))
-DEM4 <- raster(paste0("75107_1048000_M-33-22-A-d-1-4.tif"))
-DEM <- merge(DEM1, DEM2, DEM3, DEM4)
-plot(DEM)
-
-# Plot it
-ggmap(map) + 
-  theme_void() + 
-  ggtitle("terrain") + 
-  theme(
-    plot.title = element_text(colour = "orange"), 
-    panel.border = element_rect(colour = "grey", fill=NA, size=2)
-  )
-
-czeladztrench <- st_read("czeladz_trench.shp")
+ortho1 <- stack(paste0("75106_1053101_M-33-22-A-d-1-1.tif"))
+ortho_extent <- shapefile("site_extent.shp")
+ortho1 <- crop(ortho1, extent(ortho_extent))
+ortho1 <- mask(x= ortho1, mask=ortho_extent)
+ortho1 <- as.data.frame(ortho1, xy = TRUE)
+ortho1 <- ortho1 %>% rename(Red = X75106_1053101_M.33.22.A.d.1.1.1,
+                            Green = X75106_1053101_M.33.22.A.d.1.1.2,
+                            Blue = X75106_1053101_M.33.22.A.d.1.1.3)
+ortho1 <- ortho1 %>% filter(Red !=0)
 czeladzlayer <- st_read("czeladz_layer.shp")
 czeladzfeature <- st_read("czeladz_feature.shp")
-czeladzfeature = st_transform(czeladzfeature, "EPSG:2180")
-Figure2 <- ggplot(data = czeladzlayer) +
-  geom_sf(fill = "grey") +
+czeladztrench <- st_read("czeladz_trench.shp")
+map3 = ggplot() +
+  geom_raster(data = ortho1, aes(x = x, y = y, fill = rgb(r = Red, g = Green, b = Blue, maxColorValue = 255)), show.legend = FALSE) +
+  geom_sf(data = czeladztrench, alpha = 0.2) +
+  geom_sf(data = czeladzlayer, alpha = 0.2) +
+  geom_sf(data = czeladzfeature, col = "black") +
+  scale_fill_identity() +
+  xlab("Longitude") +
+  ylab("Latitude") +
+  ggtitle("Excavated area") +
+  annotation_scale(location = "bl", width_hint = 0.4) +
+  theme(panel.grid.major = element_line(color = gray(0.5), linetype = "dashed", 
+                                        size = 0.5), panel.background = element_rect(fill = "white"))
+czeladzfeature$phase <- factor(czeladzfeature$phase, levels = c("MN", "MBA", "MIA", "modern", "uncertain"))
+map4 = ggplot() +
+  geom_sf(data = czeladzlayer, fill = "gray") +
   geom_sf(data = czeladzfeature, aes(fill = phase)) +
   geom_sf(data = czeladztrench, fill = "white", alpha = 0.01) + 
   xlab("Longitude") +
   ylab("Latitude") +
-  ggtitle("Czeladź Wielka: feature distribution") +
-  annotation_scale(location = "bl", width_hint = 0.4) +
-  annotation_north_arrow(location = "tl", which_north = "true", 
-                         pad_x = unit(0.75, "in"), pad_y = unit(0.5, "in"),
-                         style = north_arrow_fancy_orienteering) +
-  theme(panel.grid.major = element_line(color = gray(0.5), linetype = "dashed", 
+  ggtitle("Feature distribution") +
+  theme(legend.position="bottom") +
+  theme(panel.grid.major = element_line(color = gray(0.5), linetype = "dashed",
                                         size = 0.5), panel.background = element_rect(fill = "white"))
-ggsave(filename = "Figure 2.jpeg", 
+Figure2<-grid.arrange(map3, map4, nrow = 2, top = textGrob("Czeladź Wielka", gp = gpar(fontsize = 30, font = 1)))
+ggsave(filename = "Figure 2.jpeg",
        plot = Figure2,
-       width = 15, 
-       height = 10,
+       width = 20,
+       height = 30,
        dpi = 300)
 
 ## 2.3. Figure 4
-czeladz_dataset <- read.csv("czeladz_dataset.csv", encoding="UTF-8", dec=".")
-LipTypes<-sort(unique(czeladz_dataset$TypeLip))
-czeladz_dataset$TypeLip<-factor(czeladz_dataset$TypeLip,levels=LipTypes)
-Fig4_1<-ggplot(subset(czeladz_dataset, !is.na(TypeLip)), aes(x=TypeLip))+
-  geom_bar(stat="count", position="dodge")+
-  geom_text(stat="count", aes(label=..count..), vjust=-0.5)+
-  ggtitle("Czeladź Wielka: lip type [n=369]")+
-  ylab("frequency")+ 
-  xlab("lip type")+
-  theme_minimal()+
-  theme(plot.title = element_text(hjust = 0.5))
-Sys.setenv(R_GSCMD = normalizePath("C:/Program Files/gs/gs9.56.1/bin/gswin64.exe"))
-PostScriptTrace("czeladz_lips.eps", "czeladz_lips.xml")
-Fig4_2_1 <- readPicture("czeladz_lips.xml")
-Fig4_2 <- pictureGrob(Fig4_2_1)
-Fig4 <- grid.arrange(Fig4_1, Fig4_2, nrow=2)
+czeladz_dataset <- read.csv("czeladz_dataset.csv", encoding = "UTF-8", dec = ".")
+LipTypes <- sort(unique(czeladz_dataset$TypeLip))
+czeladz_dataset$TypeLip <- factor(czeladz_dataset$TypeLip,levels = LipTypes)
+graph1 <- ggplot(subset(czeladz_dataset, !is.na(TypeLip)), aes(x = TypeLip)) +
+  geom_bar(stat = "count", position = "dodge") +
+  geom_text(stat = "count", aes(label = ..count..), vjust = -0.5) +
+  ggtitle("Czeladź Wielka: lip type [n=369]") +
+  ylab("Frequency") + 
+  xlab("Lip type") +
+  theme_minimal() +
+  theme(plot.title = element_text(hjust = 0.5)) +
+  theme(plot.margin = unit(c(5, 5, 0, 5), "pt"))
+
+image1 <- image_read("czeladz_lips.png")
+graph1_image1 <- image1 %>%
+  image_scale("2000") %>%
+  image_background("white", flatten = TRUE) %>%
+  image_border("white", "100")
+graph1_image1 <- rasterGrob(graph1_image1)
+Figure4 <- grid.arrange(graph1, graph1_image1, nrow = 2, widths = c(1))
+Figure4
+
+ggsave(filename = "Figure 4.png",
+       plot = Figure4,
+       width = 20,
+       height = 10,
+       dpi = 300)
 
 ## 2.4. Figure 5
 
