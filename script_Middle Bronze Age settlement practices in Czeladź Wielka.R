@@ -1,7 +1,8 @@
 # Title: Middle Bronze Age settlement practices in Czeladź Wielka.
 # Contribution towards settlement archaeology, chronology and production of the Silesian-Greater Poland Tumulus Culture. Script.
 # Authors: Jan Romaniszyn, Robert Staniuk, Patrycja Silska, Weronika Skrzyniecka
-# Date: 2022-09-09
+# For question regarding the code contact R. Staniuk (rstaniuk@gmail.com)
+# Date: 2022.10.28
 
 # 1. Packages:
 library(tidyverse)
@@ -14,6 +15,7 @@ library(ggspatial)
 library(grid)
 library(gridExtra)
 library(magick)
+library(classInt)
 library(data.table)
 library(ggridges)
 library(oxcAAR)
@@ -51,11 +53,11 @@ map2 = ggplot() +
   theme(panel.grid.major = element_line(color = gray(0.5), linetype = "dashed", size = 0.5), panel.background = element_rect(fill = "white")) +
   coord_sf(xlim = st_bbox(czeladz_region$geometry)[c('xmin','xmax')], ylim = st_bbox(czeladz_region$geometry)[c('ymin','ymax')])
 
-gg_Figure1 = ggdraw() +
+Figure1 = ggdraw() +
   draw_plot(map2) +
   draw_plot(map1, x = 0.8, y = 0.7, width = 0.2, height = 0.2)
 ggsave(filename = "Figure 1.jpeg",
-       plot = gg_Figure1,
+       plot = Figure1,
        width = 14,
        height = 10,
        dpi = 300)
@@ -124,25 +126,150 @@ graph1_image1 <- image1 %>%
   image_border("white", "100")
 graph1_image1 <- rasterGrob(graph1_image1)
 Figure4 <- grid.arrange(graph1, graph1_image1, nrow = 2, widths = c(1))
-Figure4
 
 ggsave(filename = "Figure 4.png",
        plot = Figure4,
        width = 20,
-       height = 10,
+       height = 11,
        dpi = 300)
 
 ## 2.4. Figure 5
+fabric <- czeladz_dataset %>%
+  count(Inclusions, InclusionsSize, InclusionsVisible) %>%
+  na.omit() %>%
+  rowid_to_column(var='FabricID')
+
+Figure5_1 <- ggplot(fabric, aes(x = as.factor(FabricID), y = n)) +
+  geom_bar(stat = "identity", position = "dodge") +
+  ggtitle("a) Fabrics [n=939]") +
+  ylab("frequency") + 
+  xlab("fabric") +
+  theme_minimal() +
+  theme(plot.title = element_text(hjust = 0.5))
+
+WallThickness <- czeladz_dataset[c(25:32)]
+WallThickness$row_mean <- rowMeans(WallThickness, na.rm = TRUE)
+Figure5_2 <- ggplot(WallThickness, aes(row_mean))+
+  geom_density(aes(y=..density..), binwidth = 1, position="identity", colour="black", fill="grey") +
+  geom_vline(xintercept = 7.894, linetype = "dashed", size = 1) +
+  labs(title = "b) Wall thickness [n=927]", x = "thickness [mm]", y = "density") +
+  theme_minimal()+
+  theme(plot.title = element_text(hjust=0.5), legend.position = "bottom", legend.title = element_blank())
+
+Figure5_3 <- ggplot(subset(czeladz_dataset, !is.na(SurfaceExterior)),aes(x = SurfaceExterior))+
+  geom_bar(stat = "count", position = "dodge")+
+  ggtitle("Exterior surface [n = 941]") +
+  ylab("frequency") + 
+  xlab("surface treatment") +
+  theme_minimal() +
+  theme(plot.title = element_text(hjust = 0.5))
+
+Figure5_4 <- ggplot(subset(czeladz_dataset, !is.na(SurfaceInterior)),aes(x = SurfaceInterior))+
+  geom_bar(stat = "count", position = "dodge")+
+  ggtitle("Interior surface [n = 941]") +
+  ylab("frequency") + 
+  xlab("surface treatment") +
+  theme_minimal() +
+  theme(plot.title = element_text(hjust = 0.5))
+
+Figure5_5 <- ggplot(subset(czeladz_dataset, !is.na(Firing)),aes(x = Firing))+
+  geom_bar(stat = "count", position = "dodge")+
+  ggtitle("Firing [n = 941]") +
+  ylab("frequency") + 
+  xlab("firing") +
+  theme_minimal() +
+  theme(plot.title = element_text(hjust = 0.5))
+
+Figure5 <- grid.arrange(Figure5_1, Figure5_2, Figure5_3, Figure5_4, Figure5_5, nrow = 5)
+ggsave(filename = "Figure 5.png",
+       plot = Figure5,
+       width = 10,
+       height = 11,
+       dpi = 300)
 
 ## 2.5. Figure 6
+decorativetechnique <- melt(czeladz_dataset, id=c("ID"), measure.vars = c("DecoratedTechA", "DecoratedTechB", "DecoratedTechC"), na.rm = TRUE)
+Figure6_1 <- ggplot(subset(decorativetechnique, !is.na(value)), aes(x = value))+
+  geom_bar(stat = "count", position = "stack")+
+  ggtitle("a) decorative technique [n = 412]") +
+  ylab("frequency")+ 
+  xlab("decorative technique")+
+  theme_minimal()+
+  theme(plot.title = element_text(hjust = 0.5))
 
-## 2.6. Figure 7
+decorativeelement <- melt(czeladz_dataset, id=c("ID"), measure.vars = c("DecoratedTechEleA", "DecoratedTechEleB", "DecoratedTechEleC"), na.rm = TRUE)
+Figure6_2 <-ggplot(subset(decorativeelement, !is.na(value)), aes(x = value)) +
+  geom_bar(stat = "count", position = "stack") +
+  ggtitle("b) decorative elements [n=339]") +
+  ylab("frequency") + 
+  xlab("decorative element") +
+  theme_minimal() +
+  theme(plot.title = element_text(hjust = 0.5))
 
-## 2.7. Figure 8
+Figure6_3<-ggplot(subset(czeladz_dataset, !is.na(DecoratedMotifGroup)), aes(x = DecoratedMotifGroup))+
+  geom_bar(stat = "count", position = "dodge")+
+  ggtitle("c) motif groups [n=314]")+
+  ylab("frequency")+ 
+  xlab("size group")+
+  theme_minimal()+
+  theme(plot.title = element_text(hjust = 0.5))
 
-## 2.8. Figure 9
+Figure6 <- grid.arrange(Figure6_1, Figure6_2, Figure6_3, nrow = 3)
+ggsave(filename = "Figure 6.png",
+       plot = Figure6,
+       width = 10,
+       height = 11,
+       dpi = 300)
 
-## 2.9. Figure 10
+## 2.6. Figure 8
+czeladzfeaturesanalysis <- merge(czeladzfeature, czeladz_dataset, by.x = "Name", by.y = "OrgID")
+classes <- classIntervals(czeladzfeaturesanalysis$SherdNumber, n = 4, style = "fisher")
+classes$brks
+czeladzfeaturesanalysis <- czeladzfeaturesanalysis %>%
+  mutate(SherdNumber_class = cut(SherdNumber, classes$brks, include.lowest = T))
+
+Figure8 <- ggplot(data = czeladzlayer) +
+  geom_sf(fill = "grey") +
+  geom_sf(data = czeladzfeaturesanalysis, aes(fill = SherdNumber_class)) +
+  geom_sf(data = czeladztrench, fill = "white", alpha = 0.01) +
+  guides(fill=guide_legend(title="Sherds per feature")) + 
+  xlab("Longitude") +
+  ylab("Latitude") +
+  ggtitle("Sherds per feature") +
+  annotation_scale(location = "bl", width_hint = 0.4) +
+  theme(panel.grid.major = element_line(color = gray(0.5), linetype = "dashed", size = 0.5), panel.background = element_rect(fill = "white"))
+ggsave(filename = "Figure 8.jpg",
+       plot = Figure8,
+       width = 11,
+       height = 11,
+       dpi = 300)
+
+## 2.7. Figure 9
+czeladzlayergridanalysis <- merge(czeladztrench, czeladz_dataset, by.x = "name", by.y = "GridID")
+classeslayergridanalysis <- classIntervals(czeladzlayergridanalysis$SherdNumber, n = 4, style = "fisher")
+classeslayergridanalysis$brks
+czeladzlayergridanalysis <- czeladzlayergridanalysis %>%
+  mutate(SherdNumber_class = cut(SherdNumber, classeslayergridanalysis$brks, include.lowest = T))
+czeladzlayergridanalysis
+
+Figure9 <- ggplot(data = czeladzlayergridanalysis) +
+  geom_sf(aes(fill = SherdNumber_class)) +
+  geom_sf(data = czeladztrench, fill = "white", alpha = 0.01) +
+  geom_sf(data = czeladzlayer, fill = "grey", alpha = 0.01) +
+  xlab("Longitude") +
+  ylab("Latitude") +
+  guides(fill=guide_legend(title="Sherds per grid")) + 
+  ggtitle("Sherds per grid") +
+  annotation_scale(location = "bl", width_hint = 0.4) +
+  annotation_north_arrow(location = "tl", which_north = "true", pad_x = unit(0.75, "in"), pad_y = unit(0.5, "in"), style = north_arrow_fancy_orienteering) +
+  theme(panel.grid.major = element_line(color = gray(0.5), linetype = "dashed", size = 0.5), panel.background = element_rect(fill = "white"))
+ggsave(filename = "Figure 9.jpg",
+       plot = Figure9,
+       width = 11,
+       height = 11,
+       dpi = 300)
+
+## 2.8. Figure 10
 czeladz_c14 <- read.csv("czeladz_c14.csv")
 quickSetupOxcal()
 czeladz_c14_cal <- oxcalCalibrate(czeladz_c14$estimation, czeladz_c14$std, czeladz_c14$labcode)
