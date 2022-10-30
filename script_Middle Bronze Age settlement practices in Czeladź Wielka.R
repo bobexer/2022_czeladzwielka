@@ -16,10 +16,6 @@ library(grid)
 library(gridExtra)
 library(magick)
 library(classInt)
-library(data.table)
-library(ggridges)
-library(oxcAAR)
-library(data.table)
 
 # 2. Figures:
 ## 2.1. Figure 1
@@ -74,6 +70,7 @@ ortho1 <- ortho1 %>% rename(Red = X75106_1053101_M.33.22.A.d.1.1.1,
 ortho1 <- ortho1 %>% filter(Red !=0)
 czeladzlayer <- st_read("czeladz_layer.shp")
 czeladzfeature <- st_read("czeladz_feature.shp")
+czeladzfeature <- st_transform(czeladzfeature, crs = 2180)
 czeladztrench <- st_read("czeladz_trench.shp")
 map3 = ggplot() +
   geom_raster(data = ortho1, aes(x = x, y = y, fill = rgb(r = Red, g = Green, b = Blue, maxColorValue = 255)), show.legend = FALSE) +
@@ -217,7 +214,7 @@ Figure6_3<-ggplot(subset(czeladz_dataset, !is.na(DecoratedMotifGroup)), aes(x = 
 Figure6 <- grid.arrange(Figure6_1, Figure6_2, Figure6_3, nrow = 3)
 ggsave(filename = "Figure 6.png",
        plot = Figure6,
-       width = 10,
+       width = 13,
        height = 11,
        dpi = 300)
 
@@ -240,8 +237,8 @@ Figure8 <- ggplot(data = czeladzlayer) +
   theme(panel.grid.major = element_line(color = gray(0.5), linetype = "dashed", size = 0.5), panel.background = element_rect(fill = "white"))
 ggsave(filename = "Figure 8.jpg",
        plot = Figure8,
-       width = 11,
-       height = 11,
+       width = 8,
+       height = 5,
        dpi = 300)
 
 ## 2.7. Figure 9
@@ -265,58 +262,6 @@ Figure9 <- ggplot(data = czeladzlayergridanalysis) +
   theme(panel.grid.major = element_line(color = gray(0.5), linetype = "dashed", size = 0.5), panel.background = element_rect(fill = "white"))
 ggsave(filename = "Figure 9.jpg",
        plot = Figure9,
-       width = 11,
-       height = 11,
-       dpi = 300)
-
-## 2.8. Figure 10
-czeladz_c14 <- read.csv("czeladz_c14.csv")
-quickSetupOxcal()
-czeladz_c14_cal <- oxcalCalibrate(czeladz_c14$estimation, czeladz_c14$std, czeladz_c14$labcode)
-czeladz_c14_comparison <- rbindlist(czeladz_c14_cal)
-czeladz_c14_comparison
-
-czeladz_c14_comparison <- c("name", "sigma_ranges", "two_sigma", "start", "end")
-czeladz_c14_comparison <- lapply(czeladz_c14_cal, function(x) x[["sigma_ranges"]])
-test <- as.data.frame(do.call(rbind, czeladz_c14_comparison))
-View(test)
-test <- rm(one_sigma)
-
-test1<-as.data.frame(test$V1)
-test1
-
-czeladz_c14_comparison <- lapply(czeladz_c14_cal, function(x) x[["start"]])
-View(czeladz_c14_comparison)
-test2 <- as.data.frame(do.call(rbind, czeladz_c14_comparison))
-test2
-
-ggplot(czeladz_c14_cal, aes(x = start, y = fct_reorder(site, start), fill = site)) + 
-  geom_density_ridges(jittered_points = TRUE,
-                      position = position_points_jitter(width = 0.05, height = 0),
-                      point_shape = '|', point_size = 0.5, point_alpha = 1, alpha = 0.7,) +
-  labs(y = "Sites", x = "Age BP") +
-  theme_ridges() + 
-  theme(legend.position = "none")
-
-
-end <- c(czeladz_c14$estimation-czeladz_c14$std)
-start <-c(czeladz_c14$estimation+czeladz_c14$std)
-czeladz_c14 <- cbind(czeladz_c14, start)
-czeladz_c14 <- cbind(czeladz_c14, end)
-head(czeladz_c14)
-czeladz_c14_ranges <- Map(`:`, czeladz_c14$start, czeladz_c14$end)
-head(czeladz_c14_ranges)
-czeladz_c14 <- transform(czeladz_c14[rep(seq_len(nrow(czeladz_c14)), lengths(czeladz_c14_ranges)), c('labcode', 'site')],
-          start = unlist(czeladz_c14_ranges))
-Figure10 <- ggplot(czeladz_c14, aes(x = start, y = fct_reorder(site, start), fill = site)) + 
-  geom_density_ridges(jittered_points = TRUE,
-                      position = position_points_jitter(width = 0.05, height = 0),
-                      point_shape = '|', point_size = 0.5, point_alpha = 1, alpha = 0.7,) +
-  labs(y = "Sites", x = "Age BP") +
-  theme_ridges() + 
-  theme(legend.position = "none")
-ggsave(filename = "Figure 10.jpeg", 
-       plot = Figure10,
-       width = 15, 
-       height = 15,
+       width = 8,
+       height = 5,
        dpi = 300)
