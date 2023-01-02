@@ -2,7 +2,7 @@
 # Contribution towards settlement archaeology, chronology and production of the Silesian-Greater Poland Tumulus Culture. Script.
 # Authors: Jan Romaniszyn, Robert Staniuk, Patrycja Silska, Weronika Skrzyniecka
 # For question regarding the code contact R. Staniuk (rstaniuk@gmail.com)
-# Date: 2022.10.28
+# Date: 2022.12.31
 
 # 1. Packages:
 library(tidyverse)
@@ -19,9 +19,9 @@ library(classInt)
 
 # 2. Figures:
 ## 2.1. Figure 1
-czeladz_region <- read.csv("czeladz_region.csv", encoding="UTF-8", dec=".")
-czeladz_region <- st_as_sf(czeladz_region, coords = c("xcoord", "ycoord"), crs = 2180)
-czeladz_region_box <- st_as_sfc(st_bbox(czeladz_region))
+czeladz_comparison <- st_read("czeladz_comparison.shp")
+czeladz_region_box <- st_as_sfc(st_bbox(czeladz_comparison))
+czeladz_comparison <- st_zm(czeladz_comparison)
 Europe <- (ne_countries(scale = "medium", type = "map_units", returnclass = "sf"))
 map1 = ggplot() +
   geom_sf(data = Europe) +
@@ -29,30 +29,36 @@ map1 = ggplot() +
   theme(panel.background = element_rect(fill = "white"),
         panel.border = element_rect(colour = "black", fill = NA, size = 1)) +
   coord_sf(xlim = c(-15, 55), ylim = c(35, 73), expand = TRUE)
-
-elevation_data <- get_elev_raster(czeladz_region, z = 9, expand = 2) #extract a raster base from the selected data
+elevation_data <- get_elev_raster(czeladz_comparison, z = 9, expand = 2) #extract a raster base from the selected data
 elevation_data_df <- as.data.frame(elevation_data, xy = TRUE)
 colnames(elevation_data_df)[3] <- "elevation" # remove rows of data frame with one or more NA's, using complete.cases
 elevation_data_df <- elevation_data_df[complete.cases(elevation_data_df), ]
-rivers <- st_read("eurriver.shp")
-rivers = st_transform(rivers, "EPSG:2180")
+lakes10 <- ne_download(scale = 10, type = "lakes", category = "physical", returnclass = "sf")
+rivers10 <- ne_download(scale = 10, type = "rivers_lake_centerlines", category = "physical", returnclass = "sf")
 map2 = ggplot() +
   geom_raster(data = elevation_data_df, aes(x = x, y = y, fill = elevation)) +
   scale_fill_gradientn(colours=c("#91cf60","#ffffbf","#fc8d59")) +
-  geom_sf(data = rivers, col = "lightblue", lwd = 1.1) +
-  geom_sf(data = czeladz_region, aes(col = C14, shape = type), size = 4) +
-  geom_sf_text(data = czeladz_region, aes(label = Figure1)) +
+  geom_sf(data = rivers10, col = "lightblue") +
+  geom_sf(data = lakes10, col = "lightblue") +
+  geom_sf_text(data = rivers10, aes(label = name), col = "lightblue") +
+  geom_sf(data = czeladz_comparison, aes(col = type), size = 4) +
+  geom_sf_text(data = czeladz_comparison, aes(label = Figure1),
+               nudge_x = c(-0.025, 0.025, 0.025),
+               nudge_y = c(-0.025, 0.025, 0.025)) +
   xlab("Longitude") +
   ylab("Latitude") +
   ggtitle("MBA sites in the Silesian-Greater Poland borderland") +
   annotation_scale(location = "bl", width_hint = 0.4) +
-  theme(panel.grid.major = element_line(color = gray(0.5), linetype = "dashed", size = 0.5), panel.background = element_rect(fill = "white")) +
-  coord_sf(xlim = st_bbox(czeladz_region$geometry)[c('xmin','xmax')], ylim = st_bbox(czeladz_region$geometry)[c('ymin','ymax')])
+  theme(p))
+
+ortho1 <- mask(x= ortho1, mask=ortho_extent)
+ortho1 <- as.data.frame(ortho1, xy = TRUE)anel.grid.major = element_line(color = gray(0.5), linetype = "dashed", size = 0.5), panel.background = element_rect(fill = "white"), legend.title = element_blank()) +
+  coord_sf(xlim = st_bbox(czeladz_comparison$geometry)[c('xmin','xmax')], ylim = st_bbox(czeladz_comparison$geometry)[c('ymin','ymax')])
 
 Figure1 = ggdraw() +
   draw_plot(map2) +
-  draw_plot(map1, x = 0.8, y = 0.7, width = 0.2, height = 0.2)
-ggsave(filename = "Figure 1.jpeg",
+  draw_plot(map1, x = 0.75, y = 0.7, width = 0.25, height = 0.25)
+ggsave(filename = "Figure 1.pdf",
        plot = Figure1,
        width = 14,
        height = 10,
@@ -95,11 +101,11 @@ map4 = ggplot() +
   theme(legend.position="bottom") +
   theme(panel.grid.major = element_line(color = gray(0.5), linetype = "dashed",
                                         size = 0.5), panel.background = element_rect(fill = "white"))
-Figure2<-grid.arrange(map3, map4, nrow = 2, top = textGrob("Czeladź Wielka", gp = gpar(fontsize = 30, font = 1)))
-ggsave(filename = "Figure 2.jpeg",
+Figure2 <- grid.arrange(map3, map4, ncol = 2, top = textGrob("Czeladź Wielka", gp = gpar(fontsize = 30)))
+ggsave(filename = "Figure 2.pdf",
        plot = Figure2,
        width = 20,
-       height = 30,
+       height = 10,
        dpi = 300)
 
 ## 2.3. Figure 4

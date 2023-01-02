@@ -1,73 +1,41 @@
 ﻿ID,Name,Figure1,xcoord,ycoord,type,C14
 1,Czeladź Wielka,Czeladź Wielka,336846.7886,412914.0703,settlement,YES
-2,Krotoszyn,,391938.3632,426725.3111,funerary,YES
-3,Niedary,,377251.1627,384708.5487,funerary,YES
-4,Bruszczewo,,334325.4359,463529.2302,settlement,YES
-5,Pudliszki,,357573.9414,435918.1206,funerary,YES
-6,Las Krotoszyn,,394216.9316,421803.0779,funerary,YES
-7,Szczepidło,,453721.7917,481995.0891,settlement,YES
-8,Cichmiana 2,,485058.431,468099.8952,settlement,YES
-9,"Krągola, stan. 6",,448308.4142,476765.4563,settlement,YES
-10,Baranów,,378247.38,430468.23,indeterminate,NO
-11,Bartków,,407580.04,345503.15,indeterminate,NO
-12,Biskupice Zabaryczne,,410720.28,429973.76,indeterminate,NO
+2,Krotoszyn,2,391938.3632,426725.3111,funerary,YES
+3,Niedary,3,377251.1627,384708.5487,funerary,YES
+4,Bruszczewo,4,334325.4359,463529.2302,settlement,YES
+5,Pudliszki,5,357573.9414,435918.1206,funerary,YES
+6,Las Krotoszyn,6,394216.9316,421803.0779,funerary,YES
+7,Szczepidło,7,453721.7917,481995.0891,settlement,YES
+8,Cichmiana 2,8,485058.431,468099.8952,settlement,YES
+9,"Krągola, stan. 6",9,448308.4142,476765.4563,settlement,YES
 13,Bogusławice,,371991.45,392119.69,funerary,NO
 14,Bożeń,,394266.37,335429.82,funerary,NO
 15,Bystre,,369365.45,386355.33,funerary,NO
-16,Cerekwica,,384696.18,369269.4,indeterminate,NO
-17,Czekanów,,424022.59,422245.04,indeterminate,NO
-18,Gliniany,,384450.38,322111.69,indeterminate,NO
 19,Gliśnica,,416440.21,406446.51,funerary,NO
 20,Grabonóg,,446836.53,365776.66,funerary,NO
 21,Grodnica 2,,451079.33,371463.19,hoard,NO
-22,Grzebielin,,414942.22,380087.96,indeterminate,NO
 23,Guzowice,,418859.3,383683.7,funerary,NO
-24,Jeziora,,414690.12,374624.81,indeterminate,NO
-25,Karwiniec,,361768.27,398049.64,indeterminate,NO
-26,Kaszowo,,405228.95,378608.54,indeterminate,NO
-27,Kąkolewo,,422288.84,422524.41,indeterminate,NO
-28,Kępno,,379624.56,429373.16,indeterminate,NO
 29,Kleszczewo,,453186.41,349139.03,funerary,NO
 30,Krotoszyn,,426644.16,392095.75,funerary,NO
 31,Kruszyniec,,427450.61,333006.76,funerary,NO
 32,Krzelów,,399762.17,327147.29,funerary,NO
-33,Krzydlina Mała,,384324.84,328501.65,indeterminate,NO
-34,Krzydlina Mała,,384324.84,328501.65,indeterminate,NO
 35,Kunowo,,453790.33,363619.44,funerary,NO
 36,Latowice 8,,420404.87,428786.18,funerary,NO
 37,Łazarzowice,,396845.66,345872.68,funerary,NO
-38,Łososiowice,,384118.99,336672.27,indeterminate,NO
 39,Masłów,,387501.09,369573.31,funerary,NO
-40,Masłów,,387501.09,369573.31,indeterminate,NO
 41,Moczydlnica Klasztorna,,395868.29,331828.83,funerary,NO
-42,Nowy Dwór,,386049.93,364754.27,indeterminate,NO
-43,Oborniki Śląskie,,383671.58,354579.3,indeterminate,NO
 44,Obrót,,374720.37,401464.26,funerary,NO
 45,Odolanów,,412768.45,408115.97,hoard,NO
-46,Ostrowo,,451209.6,364045.79,indeterminate,NO
 47,Pawłów Trzebnicki,,389597.96,362623.92,funerary,NO
-48,Pełczyn,,394237.08,339258.31,indeterminate,NO
-49,Pełczyn,,394237.08,339258.31,indeterminate,NO
-50,Piotrowice Małe,,409201.54,335238.22,indeterminate,NO
-51,Pogalewo Małe,,379052.87,336607.05,indeterminate,NO
 52,Poniec,,435389.47,348755.36,hoard,NO
-53,Powidzko,,399317.62,358616.72,indeterminate,NO
 54,Przyborowo,,430489.51,356923.33,hoard,NO
 55,Pudliszki,,436035.45,357521.82,funerary,NO
-56,Sądowel,,416921.44,334526.36,indeterminate,NO
 57,Siciny,,432080.73,322391.17,funerary,NO
-58,Siemianice,,368396.78,440099.38,indeterminate,NO
 59,Siemianice,,385902.84,354351.98,funerary,NO
 60,Skoroszów,,394851.27,374630.07,funerary,NO
 61,Smoszew,,423780.7,396154.9,funerary,NO
 62,Staszowice,,398380.69,345184.14,funerary,NO
-63,Sułów,,403986.07,372648.26,indeterminate,NO
-64,Sułów Wielki,,422357.86,339627.49,indeterminate,NO
-65,Tworzymirki,,455623.61,364274.12,indeterminate,NO
-66,Węgrzce,,404343.48,331838.13,indeterminate,NO
 67,Wielka Lipa,,386320.16,350608.24,funerary,NO
-68,Wielka Lipa,,386320.16,350608.24,indeterminate,NO
-69,Witoszyce,,433729.94,328283.72,indeterminate,NO
-70,Włoszakowice,,454976.18,319339.31,indeterminate,NO
 71,Wymysłowo,,438765.18,362571.4,funerary,NO
-72,Zubrza,,411713.52,346804.86,indeterminate,NO
+73,Górzyca,10,205176.0032,523158.8445,funerary,YES
+74,Lutomiersk-Koziówki 3 a-c,11,515280.1169,431876.3703,settlement,YES
