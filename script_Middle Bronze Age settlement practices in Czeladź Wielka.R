@@ -16,6 +16,7 @@ library(grid)
 library(gridExtra)
 library(magick)
 library(classInt)
+library(reshape2)
 
 # 2. Figures:
 ## 2.1. Figure 1
@@ -33,8 +34,8 @@ elevation_data <- get_elev_raster(czeladz_comparison, z = 9, expand = 2) #extrac
 elevation_data_df <- as.data.frame(elevation_data, xy = TRUE)
 colnames(elevation_data_df)[3] <- "elevation" # remove rows of data frame with one or more NA's, using complete.cases
 elevation_data_df <- elevation_data_df[complete.cases(elevation_data_df), ]
-lakes10 <- ne_download(scale = 10, type = "lakes", category = "physical", returnclass = "sf")
-rivers10 <- ne_download(scale = 10, type = "rivers_lake_centerlines", category = "physical", returnclass = "sf")
+lakes10 <- st_read("ne_10m_lakes.shp")
+rivers10 <- st_read("ne_10m_rivers_lake_centerlines.shp")
 map2 = ggplot() +
   geom_raster(data = elevation_data_df, aes(x = x, y = y, fill = elevation)) +
   scale_fill_gradientn(colours=c("#91cf60","#ffffbf","#fc8d59")) +
@@ -45,16 +46,13 @@ map2 = ggplot() +
   geom_sf_text(data = czeladz_comparison, aes(label = Figure1),
                nudge_x = c(-0.025, 0.025, 0.025),
                nudge_y = c(-0.025, 0.025, 0.025)) +
+  coord_sf(xlim = st_bbox(czeladz_comparison$geometry)[c('xmin','xmax')], ylim = st_bbox(czeladz_comparison$geometry)[c('ymin','ymax')]) +
   xlab("Longitude") +
   ylab("Latitude") +
   ggtitle("MBA sites in the Silesian-Greater Poland borderland") +
   annotation_scale(location = "bl", width_hint = 0.4) +
-  theme(p))
-
-ortho1 <- mask(x= ortho1, mask=ortho_extent)
-ortho1 <- as.data.frame(ortho1, xy = TRUE)anel.grid.major = element_line(color = gray(0.5), linetype = "dashed", size = 0.5), panel.background = element_rect(fill = "white"), legend.title = element_blank()) +
-  coord_sf(xlim = st_bbox(czeladz_comparison$geometry)[c('xmin','xmax')], ylim = st_bbox(czeladz_comparison$geometry)[c('ymin','ymax')])
-
+  theme(panel.grid.major = element_line(color = gray(0.5), linetype = "dashed", 
+                                        size = 0.5), panel.background = element_rect(fill = "white"))
 Figure1 = ggdraw() +
   draw_plot(map2) +
   draw_plot(map1, x = 0.75, y = 0.7, width = 0.25, height = 0.25)
@@ -130,7 +128,7 @@ graph1_image1 <- image1 %>%
 graph1_image1 <- rasterGrob(graph1_image1)
 Figure4 <- grid.arrange(graph1, graph1_image1, nrow = 2, widths = c(1))
 
-ggsave(filename = "Figure 4.png",
+ggsave(filename = "Figure 4.pdf",
        plot = Figure4,
        width = 20,
        height = 11,
@@ -161,7 +159,7 @@ Figure5_2 <- ggplot(WallThickness, aes(row_mean))+
 
 Figure5_3 <- ggplot(subset(czeladz_dataset, !is.na(SurfaceExterior)),aes(x = SurfaceExterior))+
   geom_bar(stat = "count", position = "dodge")+
-  ggtitle("Exterior surface [n = 941]") +
+  ggtitle("c) Exterior surface [n = 941]") +
   ylab("frequency") + 
   xlab("surface treatment") +
   theme_minimal() +
@@ -169,7 +167,7 @@ Figure5_3 <- ggplot(subset(czeladz_dataset, !is.na(SurfaceExterior)),aes(x = Sur
 
 Figure5_4 <- ggplot(subset(czeladz_dataset, !is.na(SurfaceInterior)),aes(x = SurfaceInterior))+
   geom_bar(stat = "count", position = "dodge")+
-  ggtitle("Interior surface [n = 941]") +
+  ggtitle("d) Interior surface [n = 941]") +
   ylab("frequency") + 
   xlab("surface treatment") +
   theme_minimal() +
@@ -177,14 +175,14 @@ Figure5_4 <- ggplot(subset(czeladz_dataset, !is.na(SurfaceInterior)),aes(x = Sur
 
 Figure5_5 <- ggplot(subset(czeladz_dataset, !is.na(Firing)),aes(x = Firing))+
   geom_bar(stat = "count", position = "dodge")+
-  ggtitle("Firing [n = 941]") +
+  ggtitle("e) Firing [n = 941]") +
   ylab("frequency") + 
   xlab("firing") +
   theme_minimal() +
   theme(plot.title = element_text(hjust = 0.5))
 
 Figure5 <- grid.arrange(Figure5_1, Figure5_2, Figure5_3, Figure5_4, Figure5_5, nrow = 5)
-ggsave(filename = "Figure 5.png",
+ggsave(filename = "Figure 5.pdf",
        plot = Figure5,
        width = 10,
        height = 11,
@@ -194,7 +192,7 @@ ggsave(filename = "Figure 5.png",
 decorativetechnique <- melt(czeladz_dataset, id=c("ID"), measure.vars = c("DecoratedTechA", "DecoratedTechB", "DecoratedTechC"), na.rm = TRUE)
 Figure6_1 <- ggplot(subset(decorativetechnique, !is.na(value)), aes(x = value))+
   geom_bar(stat = "count", position = "stack")+
-  ggtitle("a) decorative technique [n = 412]") +
+  ggtitle("a) Decorative technique [n = 412]") +
   ylab("frequency")+ 
   xlab("decorative technique")+
   theme_minimal()+
@@ -203,22 +201,26 @@ Figure6_1 <- ggplot(subset(decorativetechnique, !is.na(value)), aes(x = value))+
 decorativeelement <- melt(czeladz_dataset, id=c("ID"), measure.vars = c("DecoratedTechEleA", "DecoratedTechEleB", "DecoratedTechEleC"), na.rm = TRUE)
 Figure6_2 <-ggplot(subset(decorativeelement, !is.na(value)), aes(x = value)) +
   geom_bar(stat = "count", position = "stack") +
-  ggtitle("b) decorative elements [n=339]") +
+  ggtitle("b) Decorative elements [n=339]") +
   ylab("frequency") + 
   xlab("decorative element") +
   theme_minimal() +
   theme(plot.title = element_text(hjust = 0.5))
 
-Figure6_3<-ggplot(subset(czeladz_dataset, !is.na(DecoratedMotifGroup)), aes(x = DecoratedMotifGroup))+
+Figure6_3 <- czeladz_dataset$DecoratedMotifGroup
+Figure6_3 <- Figure6_3[Figure6_3 != 0]
+Figure6_3 <- as.data.frame(Figure6_3)
+Figure6_3 <- rename(Figure6_3, DecoratedMotifGroup = Figure6_3)
+Figure6_3 <- ggplot(Figure6_3, aes(x = DecoratedMotifGroup))+
   geom_bar(stat = "count", position = "dodge")+
-  ggtitle("c) motif groups [n=314]")+
+  ggtitle("c) Motif groups [n=314]")+
   ylab("frequency")+ 
   xlab("size group")+
   theme_minimal()+
   theme(plot.title = element_text(hjust = 0.5))
 
 Figure6 <- grid.arrange(Figure6_1, Figure6_2, Figure6_3, nrow = 3)
-ggsave(filename = "Figure 6.png",
+ggsave(filename = "Figure 6.pdf",
        plot = Figure6,
        width = 13,
        height = 11,
@@ -241,7 +243,7 @@ Figure8 <- ggplot(data = czeladzlayer) +
   ggtitle("Sherds per feature") +
   annotation_scale(location = "bl", width_hint = 0.4) +
   theme(panel.grid.major = element_line(color = gray(0.5), linetype = "dashed", size = 0.5), panel.background = element_rect(fill = "white"))
-ggsave(filename = "Figure 8.jpg",
+ggsave(filename = "Figure 8.pdf",
        plot = Figure8,
        width = 8,
        height = 5,
@@ -266,7 +268,7 @@ Figure9 <- ggplot(data = czeladzlayergridanalysis) +
   annotation_scale(location = "bl", width_hint = 0.4) +
   annotation_north_arrow(location = "tl", which_north = "true", pad_x = unit(0.75, "in"), pad_y = unit(0.5, "in"), style = north_arrow_fancy_orienteering) +
   theme(panel.grid.major = element_line(color = gray(0.5), linetype = "dashed", size = 0.5), panel.background = element_rect(fill = "white"))
-ggsave(filename = "Figure 9.jpg",
+ggsave(filename = "Figure 9.pdf",
        plot = Figure9,
        width = 8,
        height = 5,
