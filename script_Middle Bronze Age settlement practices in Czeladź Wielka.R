@@ -63,14 +63,14 @@ ggsave(filename = "Figure 1.pdf",
        dpi = 300)
 
 ## 2.2. Figure 2
-ortho1 <- stack(paste0("75106_1053101_M-33-22-A-d-1-1.tif"))
+ortho1 <- stack(paste0("ortho1.tiff"))
 ortho_extent <- shapefile("site_extent.shp")
 ortho1 <- crop(ortho1, extent(ortho_extent))
-ortho1 <- mask(x= ortho1, mask=ortho_extent)
+ortho1 <- mask(x = ortho1, mask = ortho_extent)
 ortho1 <- as.data.frame(ortho1, xy = TRUE)
-ortho1 <- ortho1 %>% rename(Red = X75106_1053101_M.33.22.A.d.1.1.1,
-                            Green = X75106_1053101_M.33.22.A.d.1.1.2,
-                            Blue = X75106_1053101_M.33.22.A.d.1.1.3)
+ortho1 <- ortho1 %>% rename(Red = ortho1_1,
+                            Green = ortho1_2,
+                            Blue = ortho1_3)
 ortho1 <- ortho1 %>% filter(Red !=0)
 czeladzlayer <- st_read("czeladz_layer.shp")
 czeladzfeature <- st_read("czeladz_feature.shp")
