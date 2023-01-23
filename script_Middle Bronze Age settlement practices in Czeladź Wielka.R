@@ -266,7 +266,6 @@ Figure9 <- ggplot(data = czeladzlayergridanalysis) +
   guides(fill=guide_legend(title="Sherds per grid")) + 
   ggtitle("Sherds per grid") +
   annotation_scale(location = "bl", width_hint = 0.4) +
-  annotation_north_arrow(location = "tl", which_north = "true", pad_x = unit(0.75, "in"), pad_y = unit(0.5, "in"), style = north_arrow_fancy_orienteering) +
   theme(panel.grid.major = element_line(color = gray(0.5), linetype = "dashed", size = 0.5), panel.background = element_rect(fill = "white"))
 ggsave(filename = "Figure 9.pdf",
        plot = Figure9,
