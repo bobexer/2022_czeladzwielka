@@ -110,7 +110,7 @@ ggsave(filename = "Figure 2.pdf",
 czeladz_dataset <- read.csv("czeladz_dataset.csv", encoding = "UTF-8", dec = ".")
 LipTypes <- sort(unique(czeladz_dataset$TypeLip))
 czeladz_dataset$TypeLip <- factor(czeladz_dataset$TypeLip,levels = LipTypes)
-graph1 <- ggplot(subset(czeladz_dataset, !is.na(TypeLip)), aes(x = TypeLip)) +
+graph1 <- ggplot(subset(czeladz_dataset, !is.na(czeladz_dataset$TypeLip)), aes(x = TypeLip)) +
   geom_bar(stat = "count", position = "dodge") +
   geom_text(stat = "count", aes(label = ..count..), vjust = -0.5) +
   ggtitle("Czeladź Wielka: lip type [n=369]") +
@@ -189,8 +189,8 @@ ggsave(filename = "Figure 5.pdf",
        dpi = 300)
 
 ## 2.5. Figure 6
-decorativetechnique <- melt(czeladz_dataset, id=c("ID"), measure.vars = c("DecoratedTechA", "DecoratedTechB", "DecoratedTechC"), na.rm = TRUE)
-Figure6_1 <- ggplot(subset(decorativetechnique, !is.na(value)), aes(x = value))+
+decorativetechnique <- melt(czeladz_dataset, id=c("ID"), measure.vars = c("DecoratedTechA", "DecoratedTechB", "DecoratedTechC"))
+Figure6_1 <- ggplot(subset(decorativetechnique, !is.na(decorativetechnique$value)), aes(x = value))+
   geom_bar(stat = "count", position = "stack")+
   ggtitle("a) Decorative technique [n = 412]") +
   ylab("frequency")+ 
@@ -207,11 +207,8 @@ Figure6_2 <-ggplot(subset(decorativeelement, !is.na(value)), aes(x = value)) +
   theme_minimal() +
   theme(plot.title = element_text(hjust = 0.5))
 
-Figure6_3 <- czeladz_dataset$DecoratedMotifGroup
-Figure6_3 <- Figure6_3[Figure6_3 != 0]
-Figure6_3 <- as.data.frame(Figure6_3)
-Figure6_3 <- rename(Figure6_3, DecoratedMotifGroup = Figure6_3)
-Figure6_3 <- ggplot(Figure6_3, aes(x = DecoratedMotifGroup))+
+decorativemotif <- melt(czeladz_dataset, id=c("ID"), measure.vars = c("DecoratedMotifGroup"))
+Figure6_3 <- ggplot(subset(decorativemotif, !is.na(value)), aes(x = value))+
   geom_bar(stat = "count", position = "dodge")+
   ggtitle("c) Motif groups [n=314]")+
   ylab("frequency")+ 
