@@ -4,6 +4,8 @@
 # For question regarding the code contact R. Staniuk (rstaniuk@gmail.com)
 # Date: 2022.12.31
 
+setwd("C:/github/2022_czeladzwielka")
+
 # 1. Packages:
 library(tidyverse)
 library(sf)
@@ -52,7 +54,7 @@ map2 = ggplot() +
   ggtitle("MBA sites in the Silesian-Greater Poland borderland") +
   annotation_scale(location = "bl", width_hint = 0.4) +
   theme(panel.grid.major = element_line(color = gray(0.5), linetype = "dashed", 
-                                        size = 0.5), panel.background = element_rect(fill = "white"))
+                                        linewidth = 0.5), panel.background = element_rect(fill = "white"))
 Figure1 = ggdraw() +
   draw_plot(map2) +
   draw_plot(map1, x = 0.75, y = 0.7, width = 0.25, height = 0.25)
@@ -86,8 +88,9 @@ map3 = ggplot() +
   ylab("Latitude") +
   ggtitle("Excavated area") +
   annotation_scale(location = "bl", width_hint = 0.4) +
+  annotation_north_arrow(location = "tl", which_north = "true") +
   theme(panel.grid.major = element_line(color = gray(0.5), linetype = "dashed", 
-                                        size = 0.5), panel.background = element_rect(fill = "white"))
+                                        linewidth = 0.5), panel.background = element_rect(fill = "white"))
 czeladzfeature$phase <- factor(czeladzfeature$phase, levels = c("MN", "MBA", "MIA", "modern", "uncertain"))
 map4 = ggplot() +
   geom_sf(data = czeladzlayer, fill = "gray") +
@@ -98,7 +101,7 @@ map4 = ggplot() +
   ggtitle("Feature distribution") +
   theme(legend.position="bottom") +
   theme(panel.grid.major = element_line(color = gray(0.5), linetype = "dashed",
-                                        size = 0.5), panel.background = element_rect(fill = "white"))
+                                        linewidth = 0.5), panel.background = element_rect(fill = "white"))
 Figure2 <- grid.arrange(map3, map4, ncol = 2, top = textGrob("Czeladź Wielka", gp = gpar(fontsize = 30)))
 ggsave(filename = "Figure 2.pdf",
        plot = Figure2,
@@ -106,7 +109,9 @@ ggsave(filename = "Figure 2.pdf",
        height = 10,
        dpi = 300)
 
-## 2.3. Figure 4
+## 2.3. Figure 3 - photographs, not generated in R
+
+## 2.4. Figure 4
 czeladz_dataset <- read.csv("czeladz_dataset.csv", encoding = "UTF-8", dec = ".")
 LipTypes <- sort(unique(czeladz_dataset$TypeLip))
 czeladz_dataset$TypeLip <- factor(czeladz_dataset$TypeLip,levels = LipTypes)
@@ -134,7 +139,7 @@ ggsave(filename = "Figure 4.pdf",
        height = 11,
        dpi = 300)
 
-## 2.4. Figure 5
+## 2.5. Figure 5
 fabric <- czeladz_dataset %>%
   count(Inclusions, InclusionsSize, InclusionsVisible) %>%
   na.omit() %>%
@@ -188,7 +193,7 @@ ggsave(filename = "Figure 5.pdf",
        height = 11,
        dpi = 300)
 
-## 2.5. Figure 6
+## 2.6. Figure 6
 decorativetechnique <- melt(czeladz_dataset, id=c("ID"), measure.vars = c("DecoratedTechA", "DecoratedTechB", "DecoratedTechC"))
 Figure6_1 <- ggplot(subset(decorativetechnique, !is.na(decorativetechnique$value)), aes(x = value))+
   geom_bar(stat = "count", position = "stack")+
@@ -223,7 +228,7 @@ ggsave(filename = "Figure 6.pdf",
        height = 11,
        dpi = 300)
 
-## 2.6. Figure 8
+## 2.7. Figure 8
 czeladzfeaturesanalysis <- merge(czeladzfeature, czeladz_dataset, by.x = "Name", by.y = "OrgID")
 classes <- classIntervals(czeladzfeaturesanalysis$SherdNumber, n = 4, style = "fisher")
 classes$brks
@@ -239,14 +244,15 @@ Figure8 <- ggplot(data = czeladzlayer) +
   ylab("Latitude") +
   ggtitle("Sherds per feature") +
   annotation_scale(location = "bl", width_hint = 0.4) +
-  theme(panel.grid.major = element_line(color = gray(0.5), linetype = "dashed", size = 0.5), panel.background = element_rect(fill = "white"))
+  annotation_north_arrow(location = "tl", which_north = "true") +
+  theme(panel.grid.major = element_line(color = gray(0.5), linetype = "dashed", linewidth = 0.5), panel.background = element_rect(fill = "white"))
 ggsave(filename = "Figure 8.pdf",
        plot = Figure8,
        width = 8,
        height = 5,
        dpi = 300)
 
-## 2.7. Figure 9
+## 2.8. Figure 9
 czeladzlayergridanalysis <- merge(czeladztrench, czeladz_dataset, by.x = "name", by.y = "GridID")
 classeslayergridanalysis <- classIntervals(czeladzlayergridanalysis$SherdNumber, n = 4, style = "fisher")
 classeslayergridanalysis$brks
@@ -263,7 +269,7 @@ Figure9 <- ggplot(data = czeladzlayergridanalysis) +
   guides(fill=guide_legend(title="Sherds per grid")) + 
   ggtitle("Sherds per grid") +
   annotation_scale(location = "bl", width_hint = 0.4) +
-  theme(panel.grid.major = element_line(color = gray(0.5), linetype = "dashed", size = 0.5), panel.background = element_rect(fill = "white"))
+  theme(panel.grid.major = element_line(color = gray(0.5), linetype = "dashed", linewidth = 0.5), panel.background = element_rect(fill = "white"))
 ggsave(filename = "Figure 9.pdf",
        plot = Figure9,
        width = 8,
