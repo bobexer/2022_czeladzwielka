@@ -1,10 +1,10 @@
 # Script for the analyses published in:
 # Middle Bronze Age Settlement in Czeladź Wielka – The Next Step Toward Determining the Habitation Model,
 # Chronology, and Pottery of the Silesian-Greater Poland Tumulus Culture
-# Authors: Jan Romaniszyn, Robert Staniuk, Patrycja Silska, Weronika Skrzyniecka
+# Authors: Jan Romaniszyn, Robert Staniuk, Patrycja Silska, Weronika Skrzyniecka, Małgorzata Talarczyk-Andrałojć
 # https://doi.org/10.1515/opar-2022-0316
 # For question regarding the code contact R. Staniuk (rstaniuk@gmail.com)
-# Date: 2022.12.31
+# Date: 2023.07.09
 
 setwd("/github/2022_czeladzwielka")
 
