@@ -1,43 +1,58 @@
-# Title: Middle Bronze Age settlement practices in Czeladź Wielka.
-# Contribution towards settlement archaeology, chronology and production of the Silesian-Greater Poland Tumulus Culture. Script.
+# Script for the analyses published in:
+# Middle Bronze Age Settlement in Czeladź Wielka – The Next Step Toward Determining the Habitation Model,
+# Chronology, and Pottery of the Silesian-Greater Poland Tumulus Culture
 # Authors: Jan Romaniszyn, Robert Staniuk, Patrycja Silska, Weronika Skrzyniecka
+# https://doi.org/10.1515/opar-2022-0316
 # For question regarding the code contact R. Staniuk (rstaniuk@gmail.com)
 # Date: 2022.12.31
 
-setwd("C:/github/2022_czeladzwielka")
+setwd("/github/2022_czeladzwielka")
 
-# 1. Packages:
+# 1. Load packages:
 library(tidyverse)
 library(sf)
 library(rnaturalearth)
 library(elevatr)
 library(raster)
-library(cowplot)
 library(ggspatial)
+library(cowplot)
 library(grid)
 library(gridExtra)
 library(magick)
-library(classInt)
 library(reshape2)
+library(classInt)
 
 # 2. Figures:
 ## 2.1. Figure 1
-czeladz_comparison <- st_read("czeladz_comparison.shp")
+### load shapefile for area outline
+czeladz_comparison <- st_read("/github/2022_czeladzwielka/spatial/czeladz_comparison.shp")
 czeladz_region_box <- st_as_sfc(st_bbox(czeladz_comparison))
 czeladz_comparison <- st_zm(czeladz_comparison)
+
+### load European country shapefile
 Europe <- (ne_countries(scale = "medium", type = "map_units", returnclass = "sf"))
+
+### generate map 1
 map1 = ggplot() +
   geom_sf(data = Europe) +
   geom_sf(data = czeladz_region_box, fill = NA, color = "red") +
   theme(panel.background = element_rect(fill = "white"),
-        panel.border = element_rect(colour = "black", fill = NA, size = 1)) +
+        panel.border = element_rect(colour = "black", fill = NA, linewidth = 1)) +
   coord_sf(xlim = c(-15, 55), ylim = c(35, 73), expand = TRUE)
-elevation_data <- get_elev_raster(czeladz_comparison, z = 9, expand = 2) #extract a raster base from the selected data
+
+### extract a raster base using the spatial coordinates
+elevation_data <- get_elev_raster(czeladz_comparison, z = 9, expand = 2)
 elevation_data_df <- as.data.frame(elevation_data, xy = TRUE)
-colnames(elevation_data_df)[3] <- "elevation" # remove rows of data frame with one or more NA's, using complete.cases
+
+### remove rows of data frame with one or more NA's, using complete.cases
+colnames(elevation_data_df)[3] <- "elevation"
 elevation_data_df <- elevation_data_df[complete.cases(elevation_data_df), ]
-lakes10 <- st_read("ne_10m_lakes.shp")
-rivers10 <- st_read("ne_10m_rivers_lake_centerlines.shp")
+
+### load lake and river shapefiles
+lakes10 <- st_read("/github/2022_czeladzwielka/spatial/ne_10m_lakes.shp")
+rivers10 <- st_read("/github/2022_czeladzwielka/spatial/ne_10m_rivers_lake_centerlines.shp")
+
+### generate map 2
 map2 = ggplot() +
   geom_raster(data = elevation_data_df, aes(x = x, y = y, fill = elevation)) +
   scale_fill_gradientn(colours=c("#91cf60","#ffffbf","#fc8d59")) +
@@ -55,29 +70,40 @@ map2 = ggplot() +
   annotation_scale(location = "bl", width_hint = 0.4) +
   theme(panel.grid.major = element_line(color = gray(0.5), linetype = "dashed", 
                                         linewidth = 0.5), panel.background = element_rect(fill = "white"))
+
+### generate Figure 1
 Figure1 = ggdraw() +
   draw_plot(map2) +
   draw_plot(map1, x = 0.75, y = 0.7, width = 0.25, height = 0.25)
-ggsave(filename = "Figure 1.pdf",
+ggsave(filename = "/github/2022_czeladzwielka/figures/Figure 1.pdf",
        plot = Figure1,
        width = 14,
        height = 10,
        dpi = 300)
 
 ## 2.2. Figure 2
-ortho1 <- stack(paste0("ortho1.tiff"))
-ortho_extent <- shapefile("site_extent.shp")
+### load orthofotomap (source: https://mapy.geoportal.gov.pl/imap/Imgp_2.html)
+ortho1 <- stack(paste0("/github/2022_czeladzwielka/spatial/ortho1.tiff"))
+ortho_extent <- shapefile("/github/2022_czeladzwielka/spatial/site_extent.shp")
+
+### transform spatial data
 ortho1 <- crop(ortho1, extent(ortho_extent))
 ortho1 <- mask(x = ortho1, mask = ortho_extent)
 ortho1 <- as.data.frame(ortho1, xy = TRUE)
-ortho1 <- ortho1 %>% rename(Red = ortho1_1,
-                            Green = ortho1_2,
-                            Blue = ortho1_3)
-ortho1 <- ortho1 %>% filter(Red !=0)
-czeladzlayer <- st_read("czeladz_layer.shp")
-czeladzfeature <- st_read("czeladz_feature.shp")
+ortho1 <- ortho1 %>%
+  rename(Red = ortho1_1,
+         Green = ortho1_2,
+         Blue = ortho1_3)
+ortho1 <- ortho1 %>%
+  filter(Red !=0)
+
+### load shapefiles
+czeladzlayer <- st_read("/github/2022_czeladzwielka/spatial/czeladz_layer.shp")
+czeladzfeature <- st_read("/github/2022_czeladzwielka/spatial/czeladz_feature.shp")
 czeladzfeature <- st_transform(czeladzfeature, crs = 2180)
-czeladztrench <- st_read("czeladz_trench.shp")
+czeladztrench <- st_read("/github/2022_czeladzwielka/spatial/czeladz_trench.shp")
+
+### generate map 3
 map3 = ggplot() +
   geom_raster(data = ortho1, aes(x = x, y = y, fill = rgb(r = Red, g = Green, b = Blue, maxColorValue = 255)), show.legend = FALSE) +
   geom_sf(data = czeladztrench, alpha = 0.2) +
@@ -91,6 +117,8 @@ map3 = ggplot() +
   annotation_north_arrow(location = "tl", which_north = "true") +
   theme(panel.grid.major = element_line(color = gray(0.5), linetype = "dashed", 
                                         linewidth = 0.5), panel.background = element_rect(fill = "white"))
+
+### generate map 4
 czeladzfeature$phase <- factor(czeladzfeature$phase, levels = c("MN", "MBA", "MIA", "modern", "uncertain"))
 map4 = ggplot() +
   geom_sf(data = czeladzlayer, fill = "gray") +
@@ -102,8 +130,10 @@ map4 = ggplot() +
   theme(legend.position="bottom") +
   theme(panel.grid.major = element_line(color = gray(0.5), linetype = "dashed",
                                         linewidth = 0.5), panel.background = element_rect(fill = "white"))
+
+### generate Figure 2
 Figure2 <- grid.arrange(map3, map4, ncol = 2, top = textGrob("Czeladź Wielka", gp = gpar(fontsize = 30)))
-ggsave(filename = "Figure 2.pdf",
+ggsave(filename = "/github/2022_czeladzwielka/figures/Figure 2.pdf",
        plot = Figure2,
        width = 20,
        height = 10,
@@ -112,9 +142,14 @@ ggsave(filename = "Figure 2.pdf",
 ## 2.3. Figure 3 - photographs, not generated in R
 
 ## 2.4. Figure 4
-czeladz_dataset <- read.csv("czeladz_dataset.csv", encoding = "UTF-8", dec = ".")
+### load data
+czeladz_dataset <- read.csv("/github/2022_czeladzwielka/data/czeladz_dataset.csv", encoding = "UTF-8", dec = ".")
+
+### structure data
 LipTypes <- sort(unique(czeladz_dataset$TypeLip))
 czeladz_dataset$TypeLip <- factor(czeladz_dataset$TypeLip,levels = LipTypes)
+
+### generate plot
 graph1 <- ggplot(subset(czeladz_dataset, !is.na(czeladz_dataset$TypeLip)), aes(x = TypeLip)) +
   geom_bar(stat = "count", position = "dodge") +
   geom_text(stat = "count", aes(label = ..count..), vjust = -0.5) +
@@ -125,26 +160,30 @@ graph1 <- ggplot(subset(czeladz_dataset, !is.na(czeladz_dataset$TypeLip)), aes(x
   theme(plot.title = element_text(hjust = 0.5)) +
   theme(plot.margin = unit(c(5, 5, 0, 5), "pt"))
 
-image1 <- image_read("czeladz_lips.png")
+### read miniatures of lips
+image1 <- image_read("/github/2022_czeladzwielka/images/czeladz_lips.png")
 graph1_image1 <- image1 %>%
   image_scale("2000") %>%
   image_background("white", flatten = TRUE) %>%
   image_border("white", "100")
 graph1_image1 <- rasterGrob(graph1_image1)
-Figure4 <- grid.arrange(graph1, graph1_image1, nrow = 2, widths = c(1))
 
-ggsave(filename = "Figure 4.pdf",
+### generate Figure 4
+Figure4 <- grid.arrange(graph1, graph1_image1, nrow = 2, widths = c(1))
+ggsave(filename = "/github/2022_czeladzwielka/figures/Figure 4.pdf",
        plot = Figure4,
        width = 20,
        height = 11,
        dpi = 300)
 
 ## 2.5. Figure 5
+### generate subset
 fabric <- czeladz_dataset %>%
   count(Inclusions, InclusionsSize, InclusionsVisible) %>%
   na.omit() %>%
   rowid_to_column(var='FabricID')
 
+### generate graph
 Figure5_1 <- ggplot(fabric, aes(x = as.factor(FabricID), y = n)) +
   geom_bar(stat = "identity", position = "dodge") +
   ggtitle("a) Fabrics [n=939]") +
@@ -153,8 +192,11 @@ Figure5_1 <- ggplot(fabric, aes(x = as.factor(FabricID), y = n)) +
   theme_minimal() +
   theme(plot.title = element_text(hjust = 0.5))
 
+### generate subset
 WallThickness <- czeladz_dataset[c(25:32)]
 WallThickness$row_mean <- rowMeans(WallThickness, na.rm = TRUE)
+
+### generate plot
 Figure5_2 <- ggplot(WallThickness, aes(row_mean))+
   geom_density(aes(y=..density..), binwidth = 1, position="identity", colour="black", fill="grey") +
   geom_vline(xintercept = 7.894, linetype = "dashed", size = 1) +
@@ -162,6 +204,7 @@ Figure5_2 <- ggplot(WallThickness, aes(row_mean))+
   theme_minimal()+
   theme(plot.title = element_text(hjust=0.5), legend.position = "bottom", legend.title = element_blank())
 
+### generate plot
 Figure5_3 <- ggplot(subset(czeladz_dataset, !is.na(SurfaceExterior)),aes(x = SurfaceExterior))+
   geom_bar(stat = "count", position = "dodge")+
   ggtitle("c) Exterior surface [n = 941]") +
@@ -170,6 +213,7 @@ Figure5_3 <- ggplot(subset(czeladz_dataset, !is.na(SurfaceExterior)),aes(x = Sur
   theme_minimal() +
   theme(plot.title = element_text(hjust = 0.5))
 
+### generate plot
 Figure5_4 <- ggplot(subset(czeladz_dataset, !is.na(SurfaceInterior)),aes(x = SurfaceInterior))+
   geom_bar(stat = "count", position = "dodge")+
   ggtitle("d) Interior surface [n = 941]") +
@@ -178,6 +222,7 @@ Figure5_4 <- ggplot(subset(czeladz_dataset, !is.na(SurfaceInterior)),aes(x = Sur
   theme_minimal() +
   theme(plot.title = element_text(hjust = 0.5))
 
+### generate plot
 Figure5_5 <- ggplot(subset(czeladz_dataset, !is.na(Firing)),aes(x = Firing))+
   geom_bar(stat = "count", position = "dodge")+
   ggtitle("e) Firing [n = 941]") +
@@ -186,15 +231,19 @@ Figure5_5 <- ggplot(subset(czeladz_dataset, !is.na(Firing)),aes(x = Firing))+
   theme_minimal() +
   theme(plot.title = element_text(hjust = 0.5))
 
+### generate Figure 5
 Figure5 <- grid.arrange(Figure5_1, Figure5_2, Figure5_3, Figure5_4, Figure5_5, nrow = 5)
-ggsave(filename = "Figure 5.pdf",
+ggsave(filename = "/github/2022_czeladzwielka/figures/Figure 5.pdf",
        plot = Figure5,
        width = 10,
        height = 11,
        dpi = 300)
 
 ## 2.6. Figure 6
+### generate subset
 decorativetechnique <- melt(czeladz_dataset, id=c("ID"), measure.vars = c("DecoratedTechA", "DecoratedTechB", "DecoratedTechC"))
+
+### generate plot
 Figure6_1 <- ggplot(subset(decorativetechnique, !is.na(decorativetechnique$value)), aes(x = value))+
   geom_bar(stat = "count", position = "stack")+
   ggtitle("a) Decorative technique [n = 412]") +
@@ -203,7 +252,10 @@ Figure6_1 <- ggplot(subset(decorativetechnique, !is.na(decorativetechnique$value
   theme_minimal()+
   theme(plot.title = element_text(hjust = 0.5))
 
+### generate subset
 decorativeelement <- melt(czeladz_dataset, id=c("ID"), measure.vars = c("DecoratedTechEleA", "DecoratedTechEleB", "DecoratedTechEleC"), na.rm = TRUE)
+
+### generate plot
 Figure6_2 <-ggplot(subset(decorativeelement, !is.na(value)), aes(x = value)) +
   geom_bar(stat = "count", position = "stack") +
   ggtitle("b) Decorative elements [n=339]") +
@@ -212,7 +264,10 @@ Figure6_2 <-ggplot(subset(decorativeelement, !is.na(value)), aes(x = value)) +
   theme_minimal() +
   theme(plot.title = element_text(hjust = 0.5))
 
+### generate subset
 decorativemotif <- melt(czeladz_dataset, id=c("ID"), measure.vars = c("DecoratedMotifGroup"))
+
+### generate plot
 Figure6_3 <- ggplot(subset(decorativemotif, !is.na(value)), aes(x = value))+
   geom_bar(stat = "count", position = "dodge")+
   ggtitle("c) Motif groups [n=314]")+
@@ -221,20 +276,25 @@ Figure6_3 <- ggplot(subset(decorativemotif, !is.na(value)), aes(x = value))+
   theme_minimal()+
   theme(plot.title = element_text(hjust = 0.5))
 
+### generate Figure 6
 Figure6 <- grid.arrange(Figure6_1, Figure6_2, Figure6_3, nrow = 3)
-ggsave(filename = "Figure 6.pdf",
+ggsave(filename = "/github/2022_czeladzwielka/figures/Figure 6.pdf",
        plot = Figure6,
        width = 13,
        height = 11,
        dpi = 300)
 
-## 2.7. Figure 8
+## 2.7. Figure 7 - photographs, not generated in R
+
+## 2.8. Figure 8
+### combine archaeological and spatial data
 czeladzfeaturesanalysis <- merge(czeladzfeature, czeladz_dataset, by.x = "Name", by.y = "OrgID")
 classes <- classIntervals(czeladzfeaturesanalysis$SherdNumber, n = 4, style = "fisher")
 classes$brks
 czeladzfeaturesanalysis <- czeladzfeaturesanalysis %>%
   mutate(SherdNumber_class = cut(SherdNumber, classes$brks, include.lowest = T))
 
+### generate map
 Figure8 <- ggplot(data = czeladzlayer) +
   geom_sf(fill = "grey") +
   geom_sf(data = czeladzfeaturesanalysis, aes(fill = SherdNumber_class)) +
@@ -246,20 +306,23 @@ Figure8 <- ggplot(data = czeladzlayer) +
   annotation_scale(location = "bl", width_hint = 0.4) +
   annotation_north_arrow(location = "tl", which_north = "true") +
   theme(panel.grid.major = element_line(color = gray(0.5), linetype = "dashed", linewidth = 0.5), panel.background = element_rect(fill = "white"))
-ggsave(filename = "Figure 8.pdf",
+
+### generate Figure 8
+ggsave(filename = "/github/2022_czeladzwielka/figures/Figure 8.pdf",
        plot = Figure8,
        width = 8,
        height = 5,
        dpi = 300)
 
-## 2.8. Figure 9
+## 2.9. Figure 9
+### combine archaeological and spatial data
 czeladzlayergridanalysis <- merge(czeladztrench, czeladz_dataset, by.x = "name", by.y = "GridID")
 classeslayergridanalysis <- classIntervals(czeladzlayergridanalysis$SherdNumber, n = 4, style = "fisher")
 classeslayergridanalysis$brks
 czeladzlayergridanalysis <- czeladzlayergridanalysis %>%
   mutate(SherdNumber_class = cut(SherdNumber, classeslayergridanalysis$brks, include.lowest = T))
-czeladzlayergridanalysis
 
+### generate map
 Figure9 <- ggplot(data = czeladzlayergridanalysis) +
   geom_sf(aes(fill = SherdNumber_class)) +
   geom_sf(data = czeladztrench, fill = "white", alpha = 0.01) +
@@ -270,8 +333,14 @@ Figure9 <- ggplot(data = czeladzlayergridanalysis) +
   ggtitle("Sherds per grid") +
   annotation_scale(location = "bl", width_hint = 0.4) +
   theme(panel.grid.major = element_line(color = gray(0.5), linetype = "dashed", linewidth = 0.5), panel.background = element_rect(fill = "white"))
-ggsave(filename = "Figure 9.pdf",
+
+### generate Figure 9
+ggsave(filename = "/github/2022_czeladzwielka/figures/Figure 9.pdf",
        plot = Figure9,
        width = 8,
        height = 5,
        dpi = 300)
+
+## 2.10. Figure 10 - photographs, radiocarbon calibration from OxCal v. 4.4.4, not generated in R
+
+## 2.11. Figure 11 - OxCal code can be found in "/github/2022_czeladzwielka/data/Figure11.csv"
